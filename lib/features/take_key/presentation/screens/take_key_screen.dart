@@ -69,10 +69,13 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
     final DateTime now = DateTime.now();
     final currentSelected = isHandover ? _handoverDateTime : _expectedDateTime;
 
+    final DateTime initialDate = currentSelected ?? (isHandover ? now : (_handoverDateTime ?? now));
+    final DateTime firstDate = isHandover ? DateTime.now() : (_handoverDateTime ?? DateTime.now());
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: currentSelected ?? now,
-      firstDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: firstDate,
       lastDate: now.add(const Duration(days: 365)),
     );
 
@@ -82,7 +85,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
       context: context,
       initialTime: currentSelected != null
           ? TimeOfDay.fromDateTime(currentSelected)
-          : TimeOfDay.now(),
+          : (isHandover
+              ? TimeOfDay.now()
+              : TimeOfDay.fromDateTime(_handoverDateTime ?? now)),
     );
 
     if (pickedTime == null) return;
@@ -270,13 +275,6 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
               if (_nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please enter a name')),
-                );
-                return;
-              }
-
-              if (_expectedDateTime != null && _handoverDateTime != null && _expectedDateTime!.isBefore(_handoverDateTime!)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Expected return time must be after handover time')),
                 );
                 return;
               }

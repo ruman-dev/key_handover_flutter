@@ -8,6 +8,7 @@ import 'package:key_handover_flutter/features/keys/data/repositories/key_reposit
 import 'package:key_handover_flutter/features/take_key/presentation/screens/take_key_screen.dart';
 import 'package:key_handover_flutter/shared/widgets/return_dialog.dart';
 import 'package:key_handover_flutter/shared/widgets/status_badge.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class KeyDetailsScreen extends StatefulWidget {
   final KeyModel keyModel;
@@ -136,7 +137,19 @@ class _KeyDetailsScreenState extends State<KeyDetailsScreen> {
                     if (_keyModel.holderPhone != null &&
                         _keyModel.holderPhone!.isNotEmpty)
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final phone = _keyModel.holderPhone!;
+                          final Uri url = Uri.parse('tel:$phone');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Could not launch phone dialer')),
+                              );
+                            }
+                          }
+                        },
                         icon: const Icon(
                           CupertinoIcons.phone,
                           color: AppColors.primary,

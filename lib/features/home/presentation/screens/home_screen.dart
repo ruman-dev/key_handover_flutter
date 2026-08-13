@@ -111,24 +111,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : _keys.isEmpty 
                     ? const Center(child: Text("No keys found"))
-                    : ListView.separated(
-                        itemCount: _keys.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 2),
-                        itemBuilder: (context, index) {
-                          final keyModel = _keys[index];
-                          return KeyTileWidget(
-                            title: keyModel.name,
-                            subtitle: keyModel.keyId,
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => KeyDetailsScreen(keyModel: keyModel),
-                                ),
-                              );
-                              _loadKeys(); // Refresh when returning
-                            },
-                          );
-                        },
+                    : RefreshIndicator(
+                        onRefresh: () => _loadKeys(_searchController.text),
+                        child: ListView.separated(
+                          itemCount: _keys.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 2),
+                          itemBuilder: (context, index) {
+                            final keyModel = _keys[index];
+                            return KeyTileWidget(
+                              title: keyModel.name,
+                              subtitle: keyModel.keyId,
+                              status: keyModel.status,
+                              onTap: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => KeyDetailsScreen(keyModel: keyModel),
+                                  ),
+                                );
+                                _loadKeys(_searchController.text); // Refresh when returning
+                              },
+                            );
+                          },
+                        ),
                       ),
               ),
             ],
