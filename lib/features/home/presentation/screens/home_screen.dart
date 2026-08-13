@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
 import 'package:key_handover_flutter/features/home/presentation/widgets/key_tile_widget.dart';
+import 'package:key_handover_flutter/features/key_details/presentation/screens/key_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -85,11 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: "Main Gate",
                       subtitle: "MG-01",
                       onTap: () {
-                        // Navigator.of(context).push(
-                        //   MaterialPageRoute(
-                        //     builder: (_) => KeyDetailScreen(),
-                        // ),
-                        // );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => KeyDetailsScreen()),
+                        );
                       },
                     );
                   },
