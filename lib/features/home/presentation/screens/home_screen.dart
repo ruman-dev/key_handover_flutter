@@ -122,7 +122,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _keys.isEmpty
-                    ? const Center(child: Text("No keys found"))
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.key_outlined,
+                            size: 60,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "No keys found",
+                            style: context.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      )
                     : RefreshIndicator(
                         onRefresh: () => _loadKeys(_searchController.text),
                         child: ListView.separated(
