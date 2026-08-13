@@ -116,7 +116,7 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
-                      CupertinoIcons.tag,
+                      Icons.key_outlined,
                       color: AppColors.primary,
                     ),
                   ),
@@ -175,9 +175,6 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
               ),
             ),
 
-            const SizedBox(height: 32),
-
-            Text('Handover Details', style: context.textTheme.titleMedium),
             const SizedBox(height: 16),
 
             // Expected Return Dropdown / Input Mock
