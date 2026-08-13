@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:key_handover_flutter/core/constants/key_status.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
+import 'package:key_handover_flutter/features/history/data/models/history_model.dart';
+import 'package:key_handover_flutter/features/history/data/repositories/history_repository.dart';
 import 'package:key_handover_flutter/features/history/presentation/widgets/history_card.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -16,6 +17,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final _searchController = TextEditingController();
   var isSearching = false;
 
+  final HistoryRepository _repository = HistoryRepository();
+  List<HistoryModel> _records = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords([String query = '']) async {
+    setState(() => _isLoading = true);
+    final results = query.isEmpty
+        ? await _repository.readAll()
+        : await _repository.search(query);
+    if (mounted) {
+      setState(() {
+        _records = results;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -24,119 +48,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Mock Data for History Records
-    final mockRecords = [
-      MockHistoryRecord(
-        keyName: 'Main Entrance Door (KEY-A01)',
-        personName: 'Sarah Jenkins',
-        takenTime: 'Oct 12, 2026, 09:15 AM',
-        returnedTime: 'Oct 12, 2026, 05:00 PM',
-        status: KeyStatus.available,
-      ),
-      MockHistoryRecord(
-        keyName: 'Server Room (KEY-S02)',
-        personName: 'Mike Ross',
-        takenTime: 'Oct 10, 2026, 10:00 AM',
-        returnedTime: 'Oct 10, 2026, 11:30 AM',
-        status: KeyStatus.available,
-      ),
-      MockHistoryRecord(
-        keyName: 'Storage Room (KEY-ST01)',
-        personName: 'John Doe',
-        takenTime: 'Oct 13, 2026, 08:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.overdue,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-      MockHistoryRecord(
-        keyName: 'Back Gate (KEY-B04)',
-        personName: 'Emily Clark',
-        takenTime: 'Oct 13, 2026, 09:00 AM',
-        returnedTime: 'Pending...',
-        status: KeyStatus.taken,
-      ),
-    ];
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Handover History')),
-      body: mockRecords.isEmpty
-          ? _buildEmptyState(context)
+      appBar: AppBar(title: const Text('History')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Column(
@@ -144,7 +59,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   TextFormField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(
+                      prefixIcon: const Icon(
                         CupertinoIcons.search,
                         color: AppColors.primary,
                       ),
@@ -159,8 +74,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 setState(() {
                                   isSearching = false;
                                 });
+                                _loadRecords();
                               },
-                              icon: Icon(CupertinoIcons.xmark_circle),
+                              icon: const Icon(CupertinoIcons.xmark_circle),
                               color: AppColors.textSecondary,
                             )
                           : null,
@@ -169,18 +85,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       setState(() {
                         isSearching = value.isNotEmpty;
                       });
+                      _loadRecords(value);
                     },
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: mockRecords.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        return HistoryCard(record: mockRecords[index]);
-                      },
-                    ),
+                    child: _records.isEmpty
+                        ? _buildEmptyState(context)
+                        : ListView.separated(
+                            itemCount: _records.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              return HistoryCard(record: _records[index]);
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -209,20 +128,4 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
     );
   }
-}
-
-class MockHistoryRecord {
-  final String keyName;
-  final String personName;
-  final String takenTime;
-  final String returnedTime;
-  final KeyStatus status;
-
-  MockHistoryRecord({
-    required this.keyName,
-    required this.personName,
-    required this.takenTime,
-    required this.returnedTime,
-    required this.status,
-  });
 }

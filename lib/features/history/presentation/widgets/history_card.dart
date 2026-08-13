@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:key_handover_flutter/core/constants/key_status.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
-import 'package:key_handover_flutter/features/history/presentation/screens/history_screen.dart';
+import 'package:key_handover_flutter/features/history/data/models/history_model.dart';
 import 'package:key_handover_flutter/shared/widgets/status_badge.dart';
 
 class HistoryCard extends StatelessWidget {
   const HistoryCard({super.key, required this.record});
 
-  final MockHistoryRecord record;
+  final HistoryModel record;
 
   @override
   Widget build(BuildContext context) {

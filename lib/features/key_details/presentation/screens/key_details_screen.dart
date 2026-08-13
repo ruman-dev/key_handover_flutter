@@ -3,22 +3,48 @@ import 'package:flutter/material.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/constants/key_status.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
+import 'package:key_handover_flutter/features/keys/data/models/key_model.dart';
+import 'package:key_handover_flutter/features/keys/data/repositories/key_repository.dart';
 import 'package:key_handover_flutter/features/take_key/presentation/screens/take_key_screen.dart';
 import 'package:key_handover_flutter/shared/widgets/return_dialog.dart';
 import 'package:key_handover_flutter/shared/widgets/status_badge.dart';
 
-class KeyDetailsScreen extends StatelessWidget {
-  const KeyDetailsScreen({super.key});
+class KeyDetailsScreen extends StatefulWidget {
+  final KeyModel keyModel;
+
+  const KeyDetailsScreen({super.key, required this.keyModel});
+
+  @override
+  State<KeyDetailsScreen> createState() => _KeyDetailsScreenState();
+}
+
+class _KeyDetailsScreenState extends State<KeyDetailsScreen> {
+  late KeyModel _keyModel;
+  final KeyRepository _keyRepo = KeyRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _keyModel = widget.keyModel;
+  }
+
+  Future<void> _refreshKey() async {
+    final updatedKey = await _keyRepo.read(_keyModel.id!);
+    if (mounted) {
+      setState(() {
+        _keyModel = updatedKey;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Mock data for UI presentation
-    const keyName = 'Main Entrance Door';
-    const keyId = 'KEY-A01';
-    const status = KeyStatus.available;
-    const holderName = 'Sarah Jenkins';
-    const expectedReturn = 'Today, 05:00 PM';
-    const borrowedAt = 'Today, 09:15 AM';
+    final keyName = _keyModel.name;
+    final keyId = _keyModel.keyId;
+    final status = _keyModel.status;
+    final holderName = _keyModel.holderName ?? 'Unknown';
+    final expectedReturn = _keyModel.expectedReturn ?? 'Not set';
+    final borrowedAt = _keyModel.borrowedAt ?? 'Not set';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Key Details')),
@@ -95,26 +121,32 @@ class KeyDetailsScreen extends StatelessWidget {
                             holderName,
                             style: context.textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Engineering Dept',
-                            style: context.textTheme.bodySmall,
-                          ),
+                          if (_keyModel.holderDept != null &&
+                              _keyModel.holderDept!.isNotEmpty)
+                            const SizedBox(height: 4),
+                          if (_keyModel.holderDept != null &&
+                              _keyModel.holderDept!.isNotEmpty)
+                            Text(
+                              _keyModel.holderDept!,
+                              style: context.textTheme.bodySmall,
+                            ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        CupertinoIcons.phone,
-                        color: AppColors.primary,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.primary.withValues(
-                          alpha: 0.1,
+                    if (_keyModel.holderPhone != null &&
+                        _keyModel.holderPhone!.isNotEmpty)
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          CupertinoIcons.phone,
+                          color: AppColors.primary,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -161,13 +193,17 @@ class KeyDetailsScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: FilledButton(
-            onPressed: () {
+            onPressed: () async {
               if (status == KeyStatus.available) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const TakeKeyScreen()),
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TakeKeyScreen(keyModel: _keyModel),
+                  ),
                 );
+                _refreshKey();
               } else {
-                confirmReturnDialog(context);
+                await confirmReturnDialog(context, _keyModel);
+                _refreshKey();
               }
             },
             child: Text(

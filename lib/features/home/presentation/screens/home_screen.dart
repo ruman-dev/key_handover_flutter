@@ -6,6 +6,9 @@ import 'package:key_handover_flutter/features/history/presentation/screens/histo
 import 'package:key_handover_flutter/features/home/presentation/widgets/key_tile_widget.dart';
 import 'package:key_handover_flutter/features/key_details/presentation/screens/key_details_screen.dart';
 
+import 'package:key_handover_flutter/features/keys/data/models/key_model.dart';
+import 'package:key_handover_flutter/features/keys/data/repositories/key_repository.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,6 +20,29 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
   var isSearching = false;
 
+  final KeyRepository _repository = KeyRepository();
+  List<KeyModel> _keys = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKeys();
+  }
+
+  Future<void> _loadKeys([String query = '']) async {
+    setState(() => _isLoading = true);
+    final results = query.isEmpty 
+        ? await _repository.readAll()
+        : await _repository.search(query);
+    if (mounted) {
+      setState(() {
+        _keys = results;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -27,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Office Keys'),
+        title: const Text('Key Manager'),
         actions: [
           IconButton(
             icon: const Icon(Icons.history_rounded),
@@ -65,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             setState(() {
                               isSearching = false;
                             });
+                            _loadKeys();
                           },
                           icon: Icon(CupertinoIcons.xmark_circle),
                           color: AppColors.textSecondary,
@@ -75,25 +102,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     isSearching = value.isNotEmpty;
                   });
+                  _loadKeys(value);
                 },
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView.separated(
-                  itemCount: 5,
-                  separatorBuilder: (_, _) => const SizedBox(height: 2),
-                  itemBuilder: (context, index) {
-                    return KeyTileWidget(
-                      title: "Main Gate",
-                      subtitle: "MG-01",
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => KeyDetailsScreen()),
-                        );
-                      },
-                    );
-                  },
-                ),
+                child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : _keys.isEmpty 
+                    ? const Center(child: Text("No keys found"))
+                    : ListView.separated(
+                        itemCount: _keys.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 2),
+                        itemBuilder: (context, index) {
+                          final keyModel = _keys[index];
+                          return KeyTileWidget(
+                            title: keyModel.name,
+                            subtitle: keyModel.keyId,
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => KeyDetailsScreen(keyModel: keyModel),
+                                ),
+                              );
+                              _loadKeys(); // Refresh when returning
+                            },
+                          );
+                        },
+                      ),
               ),
             ],
           ),

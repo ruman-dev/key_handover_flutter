@@ -4,35 +4,74 @@ import 'package:intl/intl.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
 
+import 'package:key_handover_flutter/core/constants/key_status.dart';
+import 'package:key_handover_flutter/features/history/data/models/history_model.dart';
+import 'package:key_handover_flutter/features/history/data/repositories/history_repository.dart';
+import 'package:key_handover_flutter/features/keys/data/models/key_model.dart';
+import 'package:key_handover_flutter/features/keys/data/repositories/key_repository.dart';
+
 class TakeKeyScreen extends StatefulWidget {
-  const TakeKeyScreen({super.key});
+  final KeyModel keyModel;
+
+  const TakeKeyScreen({super.key, required this.keyModel});
 
   @override
   State<TakeKeyScreen> createState() => _TakeKeyScreenState();
 }
 
 class _TakeKeyScreenState extends State<TakeKeyScreen> {
-  DateTime? _selectedDateTime;
+  DateTime? _handoverDateTime;
+  DateTime? _expectedDateTime;
+
+  late final TextEditingController _nameController;
+  late final TextEditingController _deptController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _handoverTimeController;
+  late final TextEditingController _expectedReturnTimeController;
   late final TextEditingController _timeController;
+
+  final KeyRepository _keyRepo = KeyRepository();
+  final HistoryRepository _historyRepo = HistoryRepository();
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController();
+    _deptController = TextEditingController();
+    _phoneController = TextEditingController();
     _timeController = TextEditingController();
+    _handoverTimeController = TextEditingController();
+    _expectedReturnTimeController = TextEditingController();
+
+    // Default handover time to now
+    _handoverDateTime = DateTime.now();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handoverTimeController.text = _formatDateTime(
+        _handoverDateTime!,
+        TimeOfDay.fromDateTime(_handoverDateTime!),
+        context,
+      );
+    });
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _deptController.dispose();
+    _phoneController.dispose();
     _timeController.dispose();
+    _handoverTimeController.dispose();
+    _expectedReturnTimeController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDateTime() async {
+  Future<void> _pickDateTime(bool isHandover) async {
     final DateTime now = DateTime.now();
+    final currentSelected = isHandover ? _handoverDateTime : _expectedDateTime;
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDateTime ?? now,
+      initialDate: currentSelected ?? now,
       firstDate: DateTime.now(),
       lastDate: now.add(const Duration(days: 365)),
     );
@@ -41,8 +80,8 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
 
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: _selectedDateTime != null
-          ? TimeOfDay.fromDateTime(_selectedDateTime!)
+      initialTime: currentSelected != null
+          ? TimeOfDay.fromDateTime(currentSelected)
           : TimeOfDay.now(),
     );
 
@@ -57,9 +96,20 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
     );
 
     setState(() {
-      _selectedDateTime = combined;
-      if (mounted) {
-        _timeController.text = _formatDateTime(combined, pickedTime, context);
+      if (isHandover) {
+        _handoverDateTime = combined;
+        _handoverTimeController.text = _formatDateTime(
+          combined,
+          pickedTime,
+          context,
+        );
+      } else {
+        _expectedDateTime = combined;
+        _expectedReturnTimeController.text = _formatDateTime(
+          combined,
+          pickedTime,
+          context,
+        );
       }
     });
   }
@@ -86,9 +136,8 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Dummy Data
-    const keyName = 'Main Entrance Door';
-    const keyId = 'KEY-A01';
+    final keyName = widget.keyModel.name;
+    final keyId = widget.keyModel.keyId;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Take Key')),
@@ -148,8 +197,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
             Text('Holder Details', style: context.textTheme.titleMedium),
             const SizedBox(height: 16),
 
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
                 labelText: 'Full Name',
                 hintText: 'Enter your name',
                 prefixIcon: Icon(CupertinoIcons.person),
@@ -157,8 +207,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
             ),
             const SizedBox(height: 16),
 
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _deptController,
+              decoration: const InputDecoration(
                 labelText: 'Department / Role (Optional)',
                 hintText: 'e.g., Engineering',
                 prefixIcon: Icon(CupertinoIcons.briefcase),
@@ -166,9 +217,10 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
             ),
             const SizedBox(height: 16),
 
-            const TextField(
+            TextField(
+              controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Phone Number (Optional)',
                 hintText: 'Enter contact number',
                 prefixIcon: Icon(CupertinoIcons.phone),
@@ -182,9 +234,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
 
             // Expected Return Dropdown / Input Mock
             TextField(
-              controller: _timeController,
+              controller: _handoverTimeController,
               readOnly: true,
-              onTap: _pickDateTime,
+              onTap: () => _pickDateTime(true),
               decoration: const InputDecoration(
                 labelText: 'Handover Time',
                 hintText: 'Select a time',
@@ -195,9 +247,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
             const SizedBox(height: 16),
             // Expected Return Dropdown / Input Mock
             TextField(
-              controller: _timeController,
+              controller: _expectedReturnTimeController,
               readOnly: true,
-              onTap: _pickDateTime,
+              onTap: () => _pickDateTime(false),
               decoration: const InputDecoration(
                 labelText: 'Expected Return Time',
                 hintText: 'Select a time',
@@ -214,7 +266,46 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () async {
+              if (_nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a name')),
+                );
+                return;
+              }
+
+              if (_expectedDateTime != null && _handoverDateTime != null && _expectedDateTime!.isBefore(_handoverDateTime!)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Expected return time must be after handover time')),
+                );
+                return;
+              }
+
+              // Update Key
+              final updatedKey = widget.keyModel.copyWith(
+                status: KeyStatus.taken,
+                holderName: _nameController.text.trim(),
+                holderDept: _deptController.text.trim(),
+                holderPhone: _phoneController.text.trim(),
+                borrowedAt: _handoverTimeController.text,
+                expectedReturn: _expectedReturnTimeController.text,
+              );
+              await _keyRepo.update(updatedKey);
+
+              // Add History Record
+              final historyRecord = HistoryModel(
+                keyName: widget.keyModel.name,
+                personName: _nameController.text.trim(),
+                takenTime: _handoverTimeController.text,
+                returnedTime: 'Pending...',
+                status: KeyStatus.taken,
+              );
+              await _historyRepo.create(historyRecord);
+
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
             child: const Text('Confirm'),
           ),
         ),

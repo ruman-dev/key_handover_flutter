@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:key_handover_flutter/core/constants/key_status.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
+import 'package:key_handover_flutter/features/history/data/repositories/history_repository.dart';
+import 'package:key_handover_flutter/features/keys/data/models/key_model.dart';
+import 'package:key_handover_flutter/features/keys/data/repositories/key_repository.dart';
 
-void confirmReturnDialog(BuildContext context) {
-  showDialog<void>(
+Future<void> confirmReturnDialog(
+  BuildContext context,
+  KeyModel keyModel,
+) async {
+  final keyRepo = KeyRepository();
+  final historyRepo = HistoryRepository();
+
+  await showDialog<void>(
     context: context,
     builder: (dialogContext) {
       return AlertDialog(
         title: const Text('Return key?'),
         content: Text(
-          'Mark this key as returned by {record.personName}?',
+          'Mark this key as returned by ${keyModel.holderName ?? "Someone"}?',
           style: context.textTheme.bodyMedium?.copyWith(
             color: AppColors.textPrimary.withValues(alpha: .8),
           ),
@@ -22,7 +33,33 @@ void confirmReturnDialog(BuildContext context) {
           TextButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
-              // await repo.returnKey(record);
+
+              // 1. Update Key
+              final updatedKey = keyModel.copyWith(
+                status: KeyStatus.available,
+                holderName: null,
+                holderDept: null,
+                holderPhone: null,
+                borrowedAt: null,
+                expectedReturn: null,
+              );
+              await keyRepo.update(updatedKey);
+
+              // 2. Update History
+              final pendingRecord = await historyRepo.findPendingRecord(
+                keyModel.name,
+              );
+              if (pendingRecord != null) {
+                final returnedTimeStr = DateFormat(
+                  "MMM dd, yyyy, hh:mm a",
+                ).format(DateTime.now());
+                final updatedRecord = pendingRecord.copyWith(
+                  status: KeyStatus.available,
+                  returnedTime: returnedTimeStr,
+                );
+                await historyRepo.update(updatedRecord);
+              }
+
               if (context.mounted) Navigator.of(context).pop();
             },
             child: Text(
