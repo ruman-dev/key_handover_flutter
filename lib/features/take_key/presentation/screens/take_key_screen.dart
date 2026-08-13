@@ -159,7 +159,7 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
 
             const TextField(
               decoration: InputDecoration(
-                labelText: 'Department / Role',
+                labelText: 'Department / Role (Optional)',
                 hintText: 'e.g., Engineering',
                 prefixIcon: Icon(CupertinoIcons.briefcase),
               ),
@@ -169,14 +169,30 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
             const TextField(
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                labelText: 'Phone Number',
+                labelText: 'Phone Number (Optional)',
                 hintText: 'Enter contact number',
                 prefixIcon: Icon(CupertinoIcons.phone),
               ),
             ),
 
+            const SizedBox(height: 32),
+
+            Text('Handover Details', style: context.textTheme.titleMedium),
             const SizedBox(height: 16),
 
+            // Expected Return Dropdown / Input Mock
+            TextField(
+              controller: _timeController,
+              readOnly: true,
+              onTap: _pickDateTime,
+              decoration: const InputDecoration(
+                labelText: 'Handover Time',
+                hintText: 'Select a time',
+                prefixIcon: Icon(CupertinoIcons.clock),
+                suffixIcon: Icon(CupertinoIcons.chevron_down),
+              ),
+            ),
+            const SizedBox(height: 16),
             // Expected Return Dropdown / Input Mock
             TextField(
               controller: _timeController,

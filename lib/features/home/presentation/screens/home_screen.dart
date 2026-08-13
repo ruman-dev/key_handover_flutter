@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
+import 'package:key_handover_flutter/features/history/presentation/screens/history_screen.dart';
 import 'package:key_handover_flutter/features/home/presentation/widgets/key_tile_widget.dart';
 import 'package:key_handover_flutter/features/key_details/presentation/screens/key_details_screen.dart';
 
@@ -32,9 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.history_rounded),
             tooltip: 'Handover history',
             onPressed: () {
-              // Navigator.of(
-              //   context,
-              // ).push(MaterialPageRoute(builder: (_) => const HistoryScreen()));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const HistoryScreen()));
             },
           ),
           const SizedBox(width: 4),
