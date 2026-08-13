@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
@@ -23,16 +24,26 @@ class _HomeScreenState extends State<HomeScreen> {
   final KeyRepository _repository = KeyRepository();
   List<KeyModel> _keys = [];
   bool _isLoading = true;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadKeys();
+
+    // Periodically refresh data every 30 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _loadKeys(_searchController.text, true);
+      }
+    });
   }
 
-  Future<void> _loadKeys([String query = '']) async {
-    setState(() => _isLoading = true);
-    final results = query.isEmpty 
+  Future<void> _loadKeys([String query = '', bool hideLoading = false]) async {
+    if (!hideLoading) {
+      setState(() => _isLoading = true);
+    }
+    final results = query.isEmpty
         ? await _repository.readAll()
         : await _repository.search(query);
     if (mounted) {
@@ -45,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -107,9 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: _isLoading 
-                  ? const Center(child: CircularProgressIndicator())
-                  : _keys.isEmpty 
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _keys.isEmpty
                     ? const Center(child: Text("No keys found"))
                     : RefreshIndicator(
                         onRefresh: () => _loadKeys(_searchController.text),
@@ -125,10 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               onTap: () async {
                                 await Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => KeyDetailsScreen(keyModel: keyModel),
+                                    builder: (_) =>
+                                        KeyDetailsScreen(keyModel: keyModel),
                                   ),
                                 );
-                                _loadKeys(_searchController.text); // Refresh when returning
+                                _loadKeys(
+                                  _searchController.text,
+                                ); // Refresh when returning
                               },
                             );
                           },

@@ -69,8 +69,11 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
     final DateTime now = DateTime.now();
     final currentSelected = isHandover ? _handoverDateTime : _expectedDateTime;
 
-    final DateTime initialDate = currentSelected ?? (isHandover ? now : (_handoverDateTime ?? now));
-    final DateTime firstDate = isHandover ? DateTime.now() : (_handoverDateTime ?? DateTime.now());
+    final DateTime initialDate =
+        currentSelected ?? (isHandover ? now : (_handoverDateTime ?? now));
+    final DateTime firstDate = isHandover
+        ? DateTime.now()
+        : (_handoverDateTime ?? DateTime.now());
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -86,8 +89,8 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
       initialTime: currentSelected != null
           ? TimeOfDay.fromDateTime(currentSelected)
           : (isHandover
-              ? TimeOfDay.now()
-              : TimeOfDay.fromDateTime(_handoverDateTime ?? now)),
+                ? TimeOfDay.now()
+                : TimeOfDay.fromDateTime(_handoverDateTime ?? now)),
     );
 
     if (pickedTime == null) return;
@@ -285,8 +288,8 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
                 holderName: _nameController.text.trim(),
                 holderDept: _deptController.text.trim(),
                 holderPhone: _phoneController.text.trim(),
-                borrowedAt: _handoverTimeController.text,
-                expectedReturn: _expectedReturnTimeController.text,
+                borrowedAt: _handoverDateTime?.toIso8601String(),
+                expectedReturn: _expectedDateTime?.toIso8601String(),
               );
               await _keyRepo.update(updatedKey);
 
@@ -294,7 +297,9 @@ class _TakeKeyScreenState extends State<TakeKeyScreen> {
               final historyRecord = HistoryModel(
                 keyName: widget.keyModel.name,
                 personName: _nameController.text.trim(),
-                takenTime: _handoverTimeController.text,
+                takenTime:
+                    _handoverDateTime?.toIso8601String() ??
+                    DateTime.now().toIso8601String(),
                 returnedTime: 'Pending...',
                 status: KeyStatus.taken,
               );

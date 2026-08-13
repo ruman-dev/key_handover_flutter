@@ -44,8 +44,8 @@ class _KeyDetailsScreenState extends State<KeyDetailsScreen> {
     final keyId = _keyModel.keyId;
     final status = _keyModel.status;
     final holderName = _keyModel.holderName ?? 'Unknown';
-    final expectedReturn = _keyModel.expectedReturn ?? 'Not set';
-    final borrowedAt = _keyModel.borrowedAt ?? 'Not set';
+    final expectedReturn = _keyModel.expectedReturn?.toFormattedDate(context) ?? 'Not set';
+    final borrowedAt = _keyModel.borrowedAt?.toFormattedDate(context) ?? 'Not set';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Key Details')),

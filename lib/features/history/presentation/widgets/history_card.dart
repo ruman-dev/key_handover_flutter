@@ -92,7 +92,7 @@ class HistoryCard extends StatelessWidget {
                 child: _buildTimeInfo(
                   context,
                   label: 'Taken',
-                  time: record.takenTime,
+                  time: record.takenTime.toFormattedDate(context),
                   icon: CupertinoIcons.arrow_uturn_right,
                   color: AppColors.taken,
                 ),
@@ -104,7 +104,7 @@ class HistoryCard extends StatelessWidget {
                   child: _buildTimeInfo(
                     context,
                     label: 'Returned',
-                    time: record.returnedTime,
+                    time: record.returnedTime.toFormattedDate(context),
                     icon: CupertinoIcons.arrow_uturn_left,
                     color: record.status == KeyStatus.overdue
                         ? AppColors.overdue

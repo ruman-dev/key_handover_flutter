@@ -30,8 +30,8 @@ class KeyRepository {
     final db = await _dbHelper.database;
     final result = await db.query(
       'keys',
-      where: 'name LIKE ? OR keyId LIKE ?',
-      whereArgs: ['%$query%', '%$query%'],
+      where: 'name LIKE ? OR keyId LIKE ? OR holderName LIKE ?',
+      whereArgs: ['%$query%', '%$query%', '%$query%'],
     );
     return result.map((json) => KeyModel.fromJson(json)).toList();
   }

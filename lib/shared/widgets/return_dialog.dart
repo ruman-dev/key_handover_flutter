@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:key_handover_flutter/core/constants/key_status.dart';
 import 'package:key_handover_flutter/core/theme/app_colors.dart';
 import 'package:key_handover_flutter/core/utils/extensions.dart';
@@ -50,9 +49,7 @@ Future<void> confirmReturnDialog(
                 keyModel.name,
               );
               if (pendingRecord != null) {
-                final returnedTimeStr = DateFormat(
-                  "MMM dd, yyyy, hh:mm a",
-                ).format(DateTime.now());
+                final returnedTimeStr = DateTime.now().toIso8601String();
                 final updatedRecord = pendingRecord.copyWith(
                   status: KeyStatus.available,
                   returnedTime: returnedTimeStr,
@@ -65,6 +62,7 @@ Future<void> confirmReturnDialog(
             child: Text(
               'Confirm',
               style: context.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
                 color: AppColors.primary,
               ),
             ),

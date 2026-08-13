@@ -60,19 +60,31 @@ class KeyModel {
       };
 
   static KeyModel fromJson(Map<String, Object?> json) {
+    KeyStatus currentStatus = KeyStatus.values.firstWhere(
+      (e) => e.name == json['status'] as String,
+      orElse: () => KeyStatus.available,
+    );
+
+    final expectedReturnStr = json['expectedReturn'] as String?;
+    if (currentStatus == KeyStatus.taken && expectedReturnStr != null) {
+      try {
+        final expectedDate = DateTime.parse(expectedReturnStr);
+        if (expectedDate.isBefore(DateTime.now())) {
+          currentStatus = KeyStatus.overdue;
+        }
+      } catch (_) {}
+    }
+
     return KeyModel(
       id: json['id'] as int?,
       name: json['name'] as String,
       keyId: json['keyId'] as String,
-      status: KeyStatus.values.firstWhere(
-        (e) => e.name == json['status'] as String,
-        orElse: () => KeyStatus.available,
-      ),
+      status: currentStatus,
       holderName: json['holderName'] as String?,
       holderDept: json['holderDept'] as String?,
       holderPhone: json['holderPhone'] as String?,
       borrowedAt: json['borrowedAt'] as String?,
-      expectedReturn: json['expectedReturn'] as String?,
+      expectedReturn: expectedReturnStr,
     );
   }
 }
